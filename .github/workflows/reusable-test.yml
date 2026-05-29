@@ -5,7 +5,7 @@ on:
     inputs:
       component:
         required: true
-        type: strings
+        type: string
 
 jobs:
   test:
