@@ -1,0 +1,60 @@
+name: GlobalFin Services Enterprise Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  validate:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/reusable-validation.yml
+  frontend-pipeline:
+    needs: validate
+    permissions:
+      contents: read
+    if: |
+      github.event_name == 'push' ||
+      contains(github.event.pull_request.labels.*.name, 'frontend')
+    uses: ./.github/workflows/reusable-test.yml
+    with:
+      component: 'frontend'
+
+  frontend-build:
+    needs: frontend-pipeline
+    permissions:
+      contents: read
+    uses: ./.github/workflows/reusable-build.yml
+    with:
+      component: 'frontend'
+
+  backend-pipeline:
+    needs: validate
+    permissions:
+      contents: read
+    uses: ./.github/workflows/reusable-test.yml
+    with:
+      component: 'backend'
+
+  backend-build:
+    needs: backend-pipeline
+    permissions:
+      contents: read
+    uses: ./.github/workflows/reusable-build.yml
+    with:
+      component: 'backend'
