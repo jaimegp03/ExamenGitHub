@@ -1,1 +1,44 @@
-
+name: Reusable Build
+ 
+on:
+  workflow_call:
+    inputs:
+      component:
+        required: true
+        type: string
+    outputs:
+      build-status:
+        description: "Resultado de la compilación"
+        value: ${{ jobs.build.outputs.status }}
+ 
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      status: ${{ steps.set-output.outputs.result }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+ 
+      - name: Build Component
+        run: |
+          cd ${{ inputs.component }}
+          echo "Compilando el componente ${{ inputs.component }}..."
+          mkdir dist && echo "Build OK" > dist/app.bin
+ 
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifact-${{ inputs.component }}
+          path: ${{ inputs.component }}/dist/
+ 
+      - name: Generate Job Summary
+        id: set-output
+        run: |
+          # Markdown Summaries
+          echo "## Reporte de Compilación para ${{ inputs.component }}" >> $GITHUB_STEP_SUMMARY
+          echo "* **Estado:** Compilado con éxito" >> $GITHUB_STEP_SUMMARY
+          echo "* **Entorno:** Producción/Staging preparado" >> $GITHUB_STEP_SUMMARY
+          echo "result=success" >> $GITHUB_OUTPUT

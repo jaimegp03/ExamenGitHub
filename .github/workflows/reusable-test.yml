@@ -1,1 +1,49 @@
+name: Reusable Testing
+
+on:
+  workflow_call:
+    inputs:
+      component:
+        required: true
+        type: strings
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        runtime: [18, 20]
+        include:
+          - os: ubuntu-latest
+            runtime: 22
+        exclude:
+          - os: windows-latest
+            runtime: 18
+
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.runtime }}
+          cache: 'npm'
+          cache-dependency-path: './${{ inputs.component }}/package-lock.json'
+
+      - name: Install Dependencies
+        run: |
+          cd ${{ inputs.component }}
+          echo "Instalando dependencias en ${{ matrix.os }} con Node ${{ matrix.runtime }}"
+          # npm ci
+
+      - name: Run Tests
+        run: |
+          cd ${{ inputs.component }}
+          echo "Ejecutando Testing Suite..."
 
