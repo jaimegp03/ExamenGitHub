@@ -58,3 +58,32 @@ jobs:
     uses: ./.github/workflows/reusable-build.yml
     with:
       component: 'backend'
+
+    deploy-staging:
+        needs: [frontend-build, backend-build]
+        runs-on: ubuntu-latest
+        environment: staging
+        permissions:
+            contents: read
+            id-token: write
+        steps:
+            - name: Checkout Code
+            uses: actions/checkout@v4
+
+            - name: OIDC Authentication with Cloud Provider
+            run: |
+                echo "Conectando de forma federada usando OpenID Connect..."
+
+    deploy-production:
+        needs: deploy-staging
+        runs-on: ubuntu-latest
+        environment: production
+        permissions:
+            contents: read
+            id-token: write
+    steps:
+        - name: Checkout Code
+        uses: actions/checkout@v4
+        
+        - name: Deploy to Cloud Enterprise
+        run: echo "Desplegando de forma segura en producción tras aprobación..."
